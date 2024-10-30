@@ -159,10 +159,10 @@ double solveEc(Bulk bulk, Dopant* dopants, size_t dopant_count, SimParameters si
 
 int main()
 {
-    size_t N = 1 << 3;
+    size_t N = 1 << 8;
 
     // make a simulation setup
-    SimParameters simParams = simConstructA(N, 0.0, 2e-5, 300, 1e-4, 1e-6);
+    SimParameters simParams = simConstructA(N, 0.0, 0.2e-5, 300, 1e-4, 1e-6);
 
     Bulk silicon;
 
@@ -191,12 +191,13 @@ int main()
     Vec fermi_lvl_vec = vecInitA(fermi_lvl, simParams.sample_count);
 
     printf("Fermi-Level: %lf eV\n", fermi_lvl);
-    printf("Built-in Potential: %lf V\n", Ec);
+    printf("Built-in Potential: %lf V\n", -Ec);
 
     Vec rho = vecInitZerosA(N);
     Vec rho_tmp = vecInitZerosA(N);
     Vec rho_d = vecInitZerosA(N);
     Vec V = vecInitZerosA(N);
+    Vec Ec_vec = vecInitZerosA(N);
     Vec res = vecInitZerosA(N);
 
     Vec subdiag_jacobian = vecInitA(-1, N);
@@ -216,23 +217,47 @@ int main()
     PyViSection* pyvi_F = pyviCreateSection(&pyvi, "Fermi lvl", pos);
 
     // setup initial guess
-    Fx1D guessRho = fxConstruct1D(vecConstruct((double[]){ 0.0, p_doping, n_doping, 0.0 }, 4), 
-                                  vecConstruct((double[]){ 0.0, p_doping, n_doping, 0.0 }, 4), INTERP_NEAREST);
+
+    double xn = (simParams.start_x + simParams.end_x)/2.0 + sqrt(2 * silicon.epsilon / ELECTRON_CHARGE * (p_doping / n_doping) /( p_doping + n_doping ) * (-Ec));
+    double xp = (simParams.start_x + simParams.end_x)/2.0 - sqrt(2 * silicon.epsilon / ELECTRON_CHARGE * (n_doping / p_doping) /( p_doping + n_doping ) * (-Ec));
+
+    printf("x_n: %le\n", xn - (simParams.start_x + simParams.end_x)/2.0);
+    printf("x_p: %le\n", xp - (simParams.start_x + simParams.end_x)/2.0);
+
+    Fx1D guessRho = fxConstruct1D(vecConstruct((double[]){  0.0, -ELECTRON_CHARGE * p_doping, ELECTRON_CHARGE * n_doping, 0.0 }, 4), 
+                                  vecConstruct((double[]){ xp - simParams.spacing,        xp,                         xn, xn + simParams.spacing }, 4), INTERP_NEAREST);
     
+    // solve for potential
+    fxInterpolateSample1D(guessRho, simParams.x_samples, &rho);
+    //poisson1DSolve(&V, rho, silicon.epsilon, 0.0, -Ec, simParams.spacing);
+
+    
+    Vec accum = vecInitZerosA(N);
+    //poissonEvaluate(V, &accum, 0.0, -Ec, silicon.epsilon, simParams.spacing);
+    //vecScale(silicon.epsilon / (simParams.spacing*simParams.spacing), accum, &accum);
+
+    pyviSectionPush(pyvi_pot, V);
+    pyviSectionPush(pyvi_ch, rho);
+    pyviSectionPush(pyvi_chd, rho_d);
+    pyviSectionPush(pyvi_J, diag_jacobian);
+    pyviSectionPush(pyvi_F, fermi_lvl_vec);
+    pyviSectionPush(pyvi_res, accum);
+
+
     for(size_t i = 0; i < 10; i++)
     {
-        Vec accum = vecInitZerosA(N);
         Vec ch_scaled = vecInitZerosA(N);
 
-        poissonEvaluate(V, &accum, 0.0, Ec, silicon.epsilon, simParams.spacing);
-        bulkNetChargeVec(silicon, dopants, 2, fermi_lvl_vec, V, simParams, &rho);
+        vecScale(-1, V, &Ec_vec);
+        poissonEvaluate(V, &accum, 0.0, -Ec, silicon.epsilon, simParams.spacing);
+        bulkNetChargeVec(silicon, dopants, 2, fermi_lvl_vec, Ec_vec, simParams, &rho);
         vecScale(simParams.spacing*simParams.spacing / silicon.epsilon, rho, &ch_scaled);
 
         vecSub(accum, ch_scaled, &accum);
 
-        bulkNetChargeVecDerivative(silicon, dopants, 2, fermi_lvl_vec, V, simParams, &rho_d);
+        bulkNetChargeVecDerivative(silicon, dopants, 2, fermi_lvl_vec, Ec_vec, simParams, &rho_d);
         vecScale(simParams.spacing*simParams.spacing / silicon.epsilon, rho_d, &ch_scaled);
-        vecSub(ref_diag_jacobian, ch_scaled, &diag_jacobian);
+        vecAdd(ref_diag_jacobian, ch_scaled, &diag_jacobian);
 
         solveTridiagonalSymm(accum, subdiag_jacobian, diag_jacobian, scratch);
         vecSub(V, accum, &accum);
