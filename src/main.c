@@ -1,0 +1,259 @@
+#include <stdio.h>
+#include <math.h>
+
+#include <include/sim.h>
+#include <include/utils.h>
+#include <include/linalg.h>
+#include <include/poisson.h>
+
+#include <include/functions.h>
+#include <include/material.h>
+
+#include <include/pyvisual.h>
+
+double bulkNetCharge(Bulk bulk, Dopant* dopants, size_t dopant_count, const double x, const double fermi_lvl, const double Ec, SimParameters simParams)
+{
+    double charge = -ELECTRON_CHARGE * bulkElectronConcSingle(bulk, fermi_lvl, Ec, simParams.temperature, simParams.tol_conc);
+
+    charge += ELECTRON_CHARGE * bulkHoleConcSingle(bulk, fermi_lvl, Ec - bulk.bandgap, simParams.temperature, simParams.tol_conc);
+
+    for(size_t i = 0; i < dopant_count; i++)
+    {
+        charge += dopantIonizedChargeSingle(dopants[i], fermi_lvl, Ec, x, simParams);
+    }
+    return charge;
+}
+
+void bulkNetChargeVec(Bulk bulk, Dopant* dopants, size_t dopant_count, const Vec fermi_lvl, const Vec Ec, SimParameters simParams, Vec* net_charge)
+{
+    Vec charge = vecInitZerosA(net_charge->len);
+
+    bulkElectronConc(bulk, fermi_lvl, Ec, simParams, net_charge);
+    vecScale(-ELECTRON_CHARGE, *net_charge, net_charge);
+
+    bulkHoleConc(bulk, fermi_lvl, Ec, simParams, &charge);
+    vecScale(ELECTRON_CHARGE, charge, &charge);
+    vecAdd(*net_charge, charge, net_charge);
+
+    for(size_t i = 0; i < dopant_count; i++)
+    {
+        dopantIonizedCharge(dopants[i], fermi_lvl, Ec, simParams, &charge);
+        vecAdd(*net_charge, charge, net_charge);
+    }
+
+    freeVec(&charge);
+}
+
+void bulkNetChargeVecDerivative(Bulk bulk, Dopant* dopants, size_t dopant_count, const Vec fermi_lvl, const Vec Ec, SimParameters simParams, Vec* net_charge_d)
+{
+    Vec charge = vecInitZerosA(net_charge_d->len);
+
+    bulkElectronConcDerivative(bulk, fermi_lvl, Ec, simParams, net_charge_d);
+    vecScale(-ELECTRON_CHARGE, *net_charge_d, net_charge_d);
+
+    bulkHoleConcDerivative(bulk, fermi_lvl, Ec, simParams, &charge);
+    vecScale(ELECTRON_CHARGE, charge, &charge);
+    vecAdd(*net_charge_d, charge, net_charge_d);
+
+    for(size_t i = 0; i < dopant_count; i++)
+    {
+        dopantIonizedChargeDerivative(dopants[i], fermi_lvl, Ec, simParams, &charge);
+        vecAdd(*net_charge_d, charge, net_charge_d);
+    }
+
+    freeVec(&charge);
+}
+
+double bulkMinConc(Bulk bulk, Dopant* dopants, size_t dopant_count, const double x, const double fermi_lvl, const double Ec, SimParameters simParams)
+{
+    double minConc = bulkElectronConcSingle(bulk, fermi_lvl, Ec, simParams.temperature, simParams.tol_conc);
+
+    minConc = min_d(bulkHoleConcSingle(bulk, fermi_lvl, Ec - bulk.bandgap, simParams.temperature, simParams.tol_conc), minConc);
+
+    for(size_t i = 0; i < dopant_count; i++)
+    {
+        minConc = min_d(dopantIonizedConcSingle(dopants[i], fermi_lvl, Ec, x, simParams), minConc);
+    }
+    return minConc;
+}
+
+// solve for fermi-level at x = 0, assuming Ec = 0 at x = 0(ref)
+double solveFermiLvl(Bulk bulk, Dopant* dopants, size_t dopant_count, SimParameters simParams)
+{
+    double low_u = 0;
+    double high_u = -bulk.bandgap;
+
+    double low_value = bulkNetCharge(bulk, dopants, dopant_count, 0.0, low_u, 0.0, simParams);
+    double high_value = bulkNetCharge(bulk, dopants, dopant_count, 0.0, high_u, 0.0, simParams);
+
+    double min_conc = bulkMinConc(bulk, dopants, dopant_count, 0.0, low_u, 0.0, simParams);
+    min_conc = min_d(bulkMinConc(bulk, dopants, dopant_count, 0.0, high_u, 0.0, simParams), min_conc);
+
+    if(low_value*high_value > 0)
+    {
+        printf("Error: Both bounds are less than zero!\n");
+        return NAN;
+    }
+
+    while(fabs(high_u - low_u) > simParams.tol_potential*fabs(high_u + low_u))
+    {
+        double new_u = (low_u + high_u) / 2;
+
+        double error = bulkNetCharge(bulk, dopants, dopant_count, 0.0, new_u, 0.0, simParams);
+        min_conc = bulkMinConc(bulk, dopants, dopant_count, 0.0, new_u, 0.0, simParams);
+
+        if(error*low_value < 0)
+        {
+            high_u = new_u;
+            high_value = error;
+        }
+        else
+        {
+            low_u = new_u;
+            low_value = error;
+        }
+    }
+
+    return (high_u + low_u) / 2;
+}
+
+// solve for Ec at x = L
+double solveEc(Bulk bulk, Dopant* dopants, size_t dopant_count, SimParameters simParams, double fermi_lvl)
+{
+    double low_Ec = fermi_lvl;
+    double high_Ec = fermi_lvl + bulk.bandgap;
+
+    double low_value = bulkNetCharge(bulk, dopants, dopant_count, simParams.end_x, fermi_lvl, low_Ec, simParams);
+    double high_value = bulkNetCharge(bulk, dopants, dopant_count, simParams.end_x, fermi_lvl, high_Ec, simParams);
+
+    double min_conc = bulkMinConc(bulk, dopants, dopant_count, simParams.end_x, fermi_lvl, low_Ec, simParams);
+    min_conc = min_d(bulkMinConc(bulk, dopants, dopant_count, simParams.end_x, fermi_lvl, high_Ec, simParams), min_conc);
+
+    if(low_value*high_value > 0)
+    {
+        printf("Error: Both bounds are less than zero!\n");
+        return NAN;
+    }
+
+    while(fabs(high_Ec - low_Ec) > simParams.tol_potential*fabs(high_Ec + low_Ec))
+    {
+        double new_Ec = (low_Ec + high_Ec) / 2;
+
+        double error = bulkNetCharge(bulk, dopants, dopant_count, simParams.end_x, fermi_lvl, new_Ec, simParams);
+        min_conc = bulkMinConc(bulk, dopants, dopant_count, simParams.end_x, fermi_lvl, new_Ec, simParams);
+
+        if(error*low_value < 0)
+        {
+            high_Ec = new_Ec;
+            high_value = error;
+        }
+        else
+        {
+            low_Ec = new_Ec;
+            low_value = error;
+        }
+    }
+
+    return (high_Ec + low_Ec) / 2;
+}
+
+int main()
+{
+    size_t N = 1 << 3;
+
+    // make a simulation setup
+    SimParameters simParams = simConstructA(N, 0.0, 2e-5, 300, 1e-4, 1e-6);
+
+    Bulk silicon;
+
+    silicon.bandgap = 1.1;
+    silicon.effMassElectron = 0.98 * ELECTRON_MASS;
+    silicon.effMassHoles = 0.48 * ELECTRON_MASS;
+    silicon.epsilon = 11.68 * VACCUME_PERMITTIVITY; // convert to C/(eV m)
+
+    double n_doping = 1e21;
+    Vec conc = vecConstruct((double[]){0.0, n_doping}, 2);
+    Vec    x = vecConstruct((double[]){0.0, simParams.end_x}, 2);
+    Fx1D phosphorous_conc = fxConstruct1D(conc, x, INTERP_NEAREST);
+    Dopant phosphorous = dopantConstructDonor1DA(phosphorous_conc, 0.045, 2, silicon, simParams);
+
+    double p_doping = 1e21;
+    conc = vecConstruct((double[]){p_doping, 0.0}, 2);
+    x    = vecConstruct((double[]){0.0 , simParams.end_x}, 2);
+    Fx1D boron_conc = fxConstruct1D(conc, x, INTERP_NEAREST);
+    Dopant boron = dopantConstructAcceptor1DA(boron_conc, 0.045, 4, silicon, simParams);
+
+    Dopant dopants[] = {phosphorous, boron};
+
+    double fermi_lvl = solveFermiLvl(silicon, dopants, 2, simParams);
+    double Ec = solveEc(silicon, dopants, 2, simParams, fermi_lvl);
+
+    Vec fermi_lvl_vec = vecInitA(fermi_lvl, simParams.sample_count);
+
+    printf("Fermi-Level: %lf eV\n", fermi_lvl);
+    printf("Built-in Potential: %lf V\n", Ec);
+
+    Vec rho = vecInitZerosA(N);
+    Vec rho_tmp = vecInitZerosA(N);
+    Vec rho_d = vecInitZerosA(N);
+    Vec V = vecInitZerosA(N);
+    Vec res = vecInitZerosA(N);
+
+    Vec subdiag_jacobian = vecInitA(-1, N);
+    Vec ref_diag_jacobian = vecInitA(2.0, N);
+    Vec diag_jacobian = vecInitA(0.0, N);
+
+    Vec scratch = vecInitZerosA(N);
+
+    PyVi pyvi = pyviInitA("v.pyvi");
+
+    PyViParameter pos = pyviCreateParameter(&pyvi, "position", simParams.x_samples);
+    PyViSection* pyvi_pot = pyviCreateSection(&pyvi, "potential", pos);
+    PyViSection* pyvi_ch = pyviCreateSection(&pyvi, "charge", pos);
+    PyViSection* pyvi_chd = pyviCreateSection(&pyvi, "charge derivative", pos);
+    PyViSection* pyvi_res = pyviCreateSection(&pyvi, "residual", pos);
+    PyViSection* pyvi_J = pyviCreateSection(&pyvi, "Jacobian", pos);
+    PyViSection* pyvi_F = pyviCreateSection(&pyvi, "Fermi lvl", pos);
+
+    // setup initial guess
+    Fx1D guessRho = fxConstruct1D(vecConstruct((double[]){ 0.0, p_doping, n_doping, 0.0 }, 4), 
+                                  vecConstruct((double[]){ 0.0, p_doping, n_doping, 0.0 }, 4), INTERP_NEAREST);
+    
+    for(size_t i = 0; i < 10; i++)
+    {
+        Vec accum = vecInitZerosA(N);
+        Vec ch_scaled = vecInitZerosA(N);
+
+        poissonEvaluate(V, &accum, 0.0, Ec, silicon.epsilon, simParams.spacing);
+        bulkNetChargeVec(silicon, dopants, 2, fermi_lvl_vec, V, simParams, &rho);
+        vecScale(simParams.spacing*simParams.spacing / silicon.epsilon, rho, &ch_scaled);
+
+        vecSub(accum, ch_scaled, &accum);
+
+        bulkNetChargeVecDerivative(silicon, dopants, 2, fermi_lvl_vec, V, simParams, &rho_d);
+        vecScale(simParams.spacing*simParams.spacing / silicon.epsilon, rho_d, &ch_scaled);
+        vecSub(ref_diag_jacobian, ch_scaled, &diag_jacobian);
+
+        solveTridiagonalSymm(accum, subdiag_jacobian, diag_jacobian, scratch);
+        vecSub(V, accum, &accum);
+
+        pyviSectionPush(pyvi_pot, V);
+        pyviSectionPush(pyvi_ch, rho);
+        pyviSectionPush(pyvi_chd, rho_d);
+        pyviSectionPush(pyvi_J, diag_jacobian);
+        pyviSectionPush(pyvi_F, fermi_lvl_vec);
+        pyviSectionPush(pyvi_res, accum);
+
+        // set V to new value
+        vecCopy(accum, &V);
+    }
+
+    pyviWrite(pyvi);
+
+    freePyVi(&pyvi);
+
+    freeDopant(&phosphorous);
+    freeDopant(&boron);
+
+    freeSim(&simParams);
+}

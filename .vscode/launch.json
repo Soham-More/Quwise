@@ -1,0 +1,31 @@
+{
+    "configurations": [
+
+        {
+            "name": "C/C++: Debug Project",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/prog",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Run script",
+                    "text": "source ${workspaceFolder}/.vscode/.gdb-script.gdb",
+                    "ignoreFailures": false
+                }
+            ],
+            "miDebuggerPath": "gdb"
+        }
+    ],
+    "version": "2.0.0"
+}

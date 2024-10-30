@@ -1,0 +1,29 @@
+{
+    "editor.suggest.localityBonus": true,
+    "files.associations": {
+        "iostream": "cpp",
+        "*.hpp": "cpp",
+        "*.h":"c",
+        "stdio.h": "c",
+        "vector": "c",
+        "utils.h": "c",
+        "linalg.h": "c",
+        "functional": "c",
+        "random": "c",
+        "test.h": "c",
+        "pde.h": "c",
+        "poisson.h": "c",
+        "stdbool.h": "c",
+        "math.h": "c"
+    },
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        "includes/**": true,
+        "build/**": true
+    },
+}
