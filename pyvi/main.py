@@ -8,9 +8,11 @@ pyvi = PyVi('v.pyvi')
 
 i = 0
 
+pyvi.display_all_sections()
+
 #pyvi.plot_sections('position', ['potential', 'Fermi lvl'], i)
 
-pyvi.plot_sections('position', ['charge', 'charge derivative'], i)
+#pyvi.plot_sections('position', ['charge', 'charge derivative'], i)
 
 #pyvi.plot_sections('position', ['residual', 'Jacobian'], i)
 
