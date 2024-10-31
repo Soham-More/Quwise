@@ -210,7 +210,7 @@ int main()
 
     PyVi pyvi = pyviInitA("v.pyvi");
 
-    PyViParameter pos = pyviCreateParameter(&pyvi, "position", simParams.x_samples);
+    PyViBase pos = pyviCreateParameter(&pyvi, "position", simParams.x_samples);
     PyViSec pyvi_pot = pyviCreateSection(&pyvi, "potential", pos);
     PyViSec pyvi_ch = pyviCreateSection(&pyvi, "charge", pos);
     PyViSec pyvi_chd = pyviCreateSection(&pyvi, "charge derivative", pos);
@@ -241,7 +241,7 @@ int main()
 
     meshSetDirichletBC(&mesh, 0.0, -Ec);
 
-    PyViParameter pos_mesh = pyviCreateParameter(&pyvi, "position_nu", mesh.x);
+    PyViBase pos_mesh = pyviCreateParameter(&pyvi, "position_nu", mesh.x);
     PyViSec pyvi_M = pyviCreateSection(&pyvi, "Mesh Test", pos_mesh);
     
     Vec accum = vecInitZerosA(N);

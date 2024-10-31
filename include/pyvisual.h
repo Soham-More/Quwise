@@ -6,21 +6,11 @@
 #include <include/linalg.h>
 #include <include/stack.h>
 
-typedef struct PyViParameter
+typedef struct PyViBase
 {
-    // section name
     const char* name;
     Vec axis;
-} PyViParameter;
-
-typedef struct PyViSection
-{
-    // section name
-    const char* name;
-    // all the Vec data, in this section
-    DynStack/*Vec*/ data;
-    PyViParameter parameter;
-} PyViSection;
+} PyViBase;
 
 typedef struct PyVi
 {
@@ -35,14 +25,12 @@ typedef struct PyViSec
     PyVi* pyvi;
 } PyViSec;
 
-typedef size_t PyViSecID;
-
 PyVi pyviInitA(const char* filename);
 
-PyViSec pyviCreateSection(PyVi* pyvi, const char* section_name, PyViParameter p);
+PyViSec pyviCreateSection(PyVi* pyvi, const char* section_name, PyViBase p);
 
 // Copies p by reference. DO NOT FREE p BEFORE PYVI is freed
-PyViParameter pyviCreateParameter(PyVi* pyvi, const char* param_name, Vec p);
+PyViBase pyviCreateParameter(PyVi* pyvi, const char* param_name, Vec p);
 
 // push a vector fx varying with parameter x, copies the vector
 void pyviSectionPush(PyViSec section, Vec fx);

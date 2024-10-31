@@ -1,18 +1,27 @@
 #include <include/pyvisual.h>
 
+typedef struct PyViSectionData
+{
+    // section name
+    const char* name;
+    // all the Vec data, in this section
+    DynStack/*Vec*/ data;
+    PyViBase parameter;
+} PyViSectionData;
+
 PyVi pyviInitA(const char* filename)
 {
     PyVi pyvi;
     pyvi.file = fopen(filename, "w");
-    pyvi.sections = dynStackInit(sizeof(PyViSection));
-    pyvi.parameters = dynStackInit(sizeof(PyViParameter));
+    pyvi.sections = dynStackInit(sizeof(PyViSectionData));
+    pyvi.parameters = dynStackInit(sizeof(PyViBase));
 
     return pyvi;
 }
 
-PyViSec pyviCreateSection(PyVi* pyvi, const char* section_name, PyViParameter p)
+PyViSec pyviCreateSection(PyVi* pyvi, const char* section_name, PyViBase p)
 {
-    PyViSection section;
+    PyViSectionData section;
     section.name = section_name;
     section.data = dynStackInit(sizeof(Vec));
     section.parameter = p;
@@ -22,10 +31,9 @@ PyViSec pyviCreateSection(PyVi* pyvi, const char* section_name, PyViParameter p)
     return (PyViSec){pyvi->sections.len - 1, pyvi};
 }
 
-// Copies p by reference. DO NOT FREE p BEFORE PYVI is freed
-PyViParameter pyviCreateParameter(PyVi* pyvi, const char* param_name, Vec p)
+PyViBase pyviCreateParameter(PyVi* pyvi, const char* param_name, Vec p)
 {
-    PyViParameter param;
+    PyViBase param;
     param.axis = p;
     param.name = param_name;
 
@@ -39,7 +47,7 @@ void pyviSectionPush(PyViSec section, Vec fx)
 {
     Vec tmp = vecCopyA(fx);
 
-    PyViSection* sec = dynStackGet(section.pyvi->sections, section.id);
+    PyViSectionData* sec = dynStackGet(section.pyvi->sections, section.id);
 
     // simply push to stack
     dynStackPush(&sec->data, &tmp);
@@ -53,7 +61,7 @@ void freePyVi(PyVi* pyvi)
 
     for(size_t i = 0; i < pyvi->sections.len; i++)
     {
-        PyViSection* section = dynStackGet(pyvi->sections, i);
+        PyViSectionData* section = dynStackGet(pyvi->sections, i);
         for(size_t j = 0; j < section->data.len; j++)
         {
             freeVec(dynStackGet(section->data, j));
@@ -81,7 +89,7 @@ void pyviWrite(PyVi pyvi)
     fprintf(pyvi.file, "[Parameters]\n");
     for(size_t i = 0; i < pyvi.parameters.len; i++)
     {
-        PyViParameter parameter = *(PyViParameter*)dynStackGet(pyvi.parameters, i);
+        PyViBase parameter = *(PyViBase*)dynStackGet(pyvi.parameters, i);
         
         fprintf(pyvi.file, "%s:", parameter.name);
         pyviPrintVec(pyvi, parameter.axis);
@@ -93,7 +101,7 @@ void pyviWrite(PyVi pyvi)
     // then add all sections
     for(size_t i = 0; i < pyvi.sections.len; i++)
     {
-        PyViSection section = *(PyViSection*)dynStackGet(pyvi.sections, i);
+        PyViSectionData section = *(PyViSectionData*)dynStackGet(pyvi.sections, i);
         
         fprintf(pyvi.file, "(%s)->[%s]\n", section.name, section.parameter.name);
         
