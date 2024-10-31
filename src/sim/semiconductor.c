@@ -50,7 +50,7 @@ double scTotalQ(SemiConductor sc, const double x, const double fermi_lvl, const 
     return charge;
 }
 
-void scVecTotalQ(SemiConductor sc, const Vec fermi_lvl, const Vec Ec, Vec* net_charge)
+void scVecTotalQ(SemiConductor sc, const double x, const Vec fermi_lvl, const Vec Ec, Vec* net_charge)
 {
     // TODO: Optimize this
     Vec charge = vecInitZerosA(net_charge->len);
