@@ -1,6 +1,6 @@
 #pragma once
 
-#include <include/linalg.h>
+#include <math/linalg.h>
 #include <include/stack.h>
 
 typedef struct Mesh

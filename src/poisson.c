@@ -1,4 +1,4 @@
-#include <include/linalg.h>
+#include <math/linalg.h>
 #include <include/poisson.h>
 
 // Solves poisson equation(exactly) for uniform sampling

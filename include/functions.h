@@ -1,5 +1,5 @@
 #pragma once
-#include <include/linalg.h>
+#include <math/linalg.h>
 #include <stdint.h>
 
 #define INTERP_NONE 0x0

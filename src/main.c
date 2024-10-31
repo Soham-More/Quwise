@@ -3,13 +3,13 @@
 
 #include <include/sim.h>
 #include <include/utils.h>
-#include <include/linalg.h>
+#include <math/linalg.h>
 #include <include/poisson.h>
 
 #include <include/functions.h>
 #include <include/material.h>
 
-#include <include/pyvisual.h>
+#include <math/pyvisual.h>
 
 #include <include/mesh.h>
 

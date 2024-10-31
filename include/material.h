@@ -2,7 +2,7 @@
 #include <stdint.h>
 
 #include <include/sim.h>
-#include <include/linalg.h>
+#include <math/linalg.h>
 #include <include/functions.h>
 
 // Bulk Semiconductor properties

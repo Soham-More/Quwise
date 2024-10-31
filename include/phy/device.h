@@ -2,7 +2,7 @@
 
 #include <include/utils.h>
 #include <include/stack.h>
-#include <include/linalg.h>
+#include <math/linalg.h>
 
 #include <include/functions.h>
 #include <include/material.h>

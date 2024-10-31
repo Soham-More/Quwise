@@ -1,4 +1,4 @@
-#include "include/linalg.h"
+#include "math/linalg.h"
 
 void error_handler(const char* file, const char* function, size_t line_no)
 {

@@ -1,4 +1,4 @@
-#include <include/linalg.h>
+#include <math/linalg.h>
 
 // Solves poisson equation(exactly) for uniform sampling
 // assumes x and rho_i have same dimension

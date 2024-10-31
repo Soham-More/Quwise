@@ -1,6 +1,6 @@
 #pragma once
 
-#include <include/linalg.h>
+#include <math/linalg.h>
 
 typedef struct SimParameters
 {
