@@ -1,7 +1,7 @@
 #pragma once
 
 #include <math/linalg.h>
-#include <include/stack.h>
+#include <math/stack.h>
 
 typedef struct Mesh
 {

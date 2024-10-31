@@ -1,7 +1,7 @@
 #pragma once
 
 #include <include/utils.h>
-#include <include/stack.h>
+#include <math/stack.h>
 #include <math/linalg.h>
 
 #include <include/functions.h>
