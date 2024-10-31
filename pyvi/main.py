@@ -1,4 +1,10 @@
-from pyvisual import *
+import matplotlib.pyplot as plt
+
+# not neat, i know
+import sys
+sys.path.insert(0, 'math/')
+
+from pyvisual import PyVi
 
 pyvi = PyVi('v.pyvi')
 
