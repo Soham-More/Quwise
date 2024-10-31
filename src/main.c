@@ -211,21 +211,12 @@ int main()
     PyVi pyvi = pyviInitA("v.pyvi");
 
     PyViParameter pos = pyviCreateParameter(&pyvi, "position", simParams.x_samples);
-    PyViSection* pyvi_pot = pyviCreateSection(&pyvi, "potential", pos);
-    PyViSection* pyvi_ch = pyviCreateSection(&pyvi, "charge", pos);
-    PyViSection* pyvi_chd = pyviCreateSection(&pyvi, "charge derivative", pos);
-    PyViSection* pyvi_res = pyviCreateSection(&pyvi, "residual", pos);
-    PyViSection* pyvi_J = pyviCreateSection(&pyvi, "Jacobian", pos);
-    PyViSection* pyvi_F = pyviCreateSection(&pyvi, "Fermi lvl", pos);
-    PyViSection* pyvi_M = pyviCreateSection(&pyvi, "Mesh Test", pos);
-
-    Mesh mesh = meshInitPieceUniformA(
-        vecConstruct((double[]){0.0, 0.2e-5}, 2),
-        (size_t[]){N},
-        1
-    );
-
-    meshSetDirichletBC(&mesh, 0.0, -Ec);
+    PyViSec pyvi_pot = pyviCreateSection(&pyvi, "potential", pos);
+    PyViSec pyvi_ch = pyviCreateSection(&pyvi, "charge", pos);
+    PyViSec pyvi_chd = pyviCreateSection(&pyvi, "charge derivative", pos);
+    PyViSec pyvi_res = pyviCreateSection(&pyvi, "residual", pos);
+    PyViSec pyvi_J = pyviCreateSection(&pyvi, "Jacobian", pos);
+    PyViSec pyvi_F = pyviCreateSection(&pyvi, "Fermi lvl", pos);
 
     // setup initial guess
 
@@ -242,9 +233,20 @@ int main()
     fxInterpolateSample1D(guessRho, simParams.x_samples, &rho);
     //poisson1DSolve(&V, rho, silicon.epsilon, 0.0, -Ec, simParams.spacing);
 
+    Mesh mesh = meshInitPieceUniformA(
+        vecConstruct((double[]){0.0, xp, xn, 0.2e-5}, 4),
+        (size_t[]){N / 8,  3 * (N / 4), N / 8},
+        3
+    );
+
+    meshSetDirichletBC(&mesh, 0.0, -Ec);
+
+    PyViParameter pos_mesh = pyviCreateParameter(&pyvi, "position_nu", mesh.x);
+    PyViSec pyvi_M = pyviCreateSection(&pyvi, "Mesh Test", pos_mesh);
     
     Vec accum = vecInitZerosA(N);
     Vec mesh_test = vecInitZerosA(N);
+    Fx1D fxPotential = fxConstruct1D(V, simParams.x_samples, INTERP_LINEAR);
     //poissonEvaluate(V, &accum, 0.0, -Ec, silicon.epsilon, simParams.spacing);
     //vecScale(silicon.epsilon / (simParams.spacing*simParams.spacing), accum, &accum);
 
@@ -257,7 +259,7 @@ int main()
     pyviSectionPush(pyvi_M, mesh_test);
 
     vecPrint(mesh.dx);
-    printf("\n");
+    printf(":len = %zu\n", mesh.len);
 
     for(size_t i = 0; i < 10; i++)
     {
@@ -277,8 +279,9 @@ int main()
         solveTridiagonalSymm(accum, subdiag_jacobian, diag_jacobian, scratch);
         vecSub(V, accum, &accum);
 
-        vecCopy(V, &mesh.potential);
-        meshPoissonEvaluate(mesh, silicon.epsilon, &mesh_test);
+        //vecCopy(V, &mesh.potential);
+        fxInterpolateSample1D(fxPotential, mesh.x, &mesh_test);
+        //meshPoissonEvaluate(mesh, silicon.epsilon, &mesh_test);
 
         pyviSectionPush(pyvi_pot, V);
         pyviSectionPush(pyvi_ch, rho);
@@ -295,6 +298,8 @@ int main()
     pyviWrite(pyvi);
 
     freePyVi(&pyvi);
+
+    freeMesh(&mesh);
 
     freeDopant(&phosphorous);
     freeDopant(&boron);

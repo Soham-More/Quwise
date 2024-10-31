@@ -10,7 +10,7 @@ PyVi pyviInitA(const char* filename)
     return pyvi;
 }
 
-PyViSection* pyviCreateSection(PyVi* pyvi, const char* section_name, PyViParameter p)
+PyViSec pyviCreateSection(PyVi* pyvi, const char* section_name, PyViParameter p)
 {
     PyViSection section;
     section.name = section_name;
@@ -19,7 +19,7 @@ PyViSection* pyviCreateSection(PyVi* pyvi, const char* section_name, PyViParamet
 
     dynStackPush(&pyvi->sections, &section);
 
-    return dynStackGet(pyvi->sections, pyvi->sections.len - 1);
+    return (PyViSec){pyvi->sections.len - 1, pyvi};
 }
 
 // Copies p by reference. DO NOT FREE p BEFORE PYVI is freed
@@ -35,12 +35,14 @@ PyViParameter pyviCreateParameter(PyVi* pyvi, const char* param_name, Vec p)
 }
 
 // push a vector fx varying with parameter x
-void pyviSectionPush(PyViSection* section, Vec fx)
+void pyviSectionPush(PyViSec section, Vec fx)
 {
     Vec tmp = vecCopyA(fx);
 
+    PyViSection* sec = dynStackGet(section.pyvi->sections, section.id);
+
     // simply push to stack
-    dynStackPush(&section->data, &tmp);
+    dynStackPush(&sec->data, &tmp);
 }
 
 void freePyVi(PyVi* pyvi)

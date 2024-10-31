@@ -29,15 +29,23 @@ typedef struct PyVi
     DynStack/*PyViParameter*/ parameters;
 } PyVi;
 
+typedef struct PyViSec
+{
+    size_t id;
+    PyVi* pyvi;
+} PyViSec;
+
+typedef size_t PyViSecID;
+
 PyVi pyviInitA(const char* filename);
 
-PyViSection* pyviCreateSection(PyVi* pyvi, const char* section_name, PyViParameter p);
+PyViSec pyviCreateSection(PyVi* pyvi, const char* section_name, PyViParameter p);
 
 // Copies p by reference. DO NOT FREE p BEFORE PYVI is freed
 PyViParameter pyviCreateParameter(PyVi* pyvi, const char* param_name, Vec p);
 
 // push a vector fx varying with parameter x, copies the vector
-void pyviSectionPush(PyViSection* section, Vec fx);
+void pyviSectionPush(PyViSec section, Vec fx);
 
 // writes all the data to file
 void pyviWrite(PyVi pyvi);
