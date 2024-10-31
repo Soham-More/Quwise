@@ -8,7 +8,7 @@
 
 #include <include/fem/functions.h>
 #include <include/sim/bulk.h>
-#include <include/sim/donor.h>
+#include <include/sim/dopant.h>
 
 #include <math/pyvisual.h>
 
@@ -173,8 +173,8 @@ int main()
 
     Bulk silicon;
     silicon.bandgap = 1.1;
-    silicon.effMassElectron = 0.98 * ELECTRON_MASS;
-    silicon.effMassHoles = 0.48 * ELECTRON_MASS;
+    silicon.effElectronMass = 0.98 * ELECTRON_MASS;
+    silicon.effHoleMass = 0.48 * ELECTRON_MASS;
     silicon.epsilon = 11.68 * VACCUME_PERMITTIVITY; // convert to C/(eV m)
 
     double n_doping = 1e21;

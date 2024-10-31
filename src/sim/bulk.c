@@ -132,7 +132,7 @@ double bulkElectrons(Bulk bulk, const double fermi_lvl, double Ec, const Environ
     // 2 strategies: if Ec - Ef > thermal_potential: use polylogarithm power series
     // if Ec - Ef < thermal_potential: use fermi-dirac function power series
 
-    double density_of_states = 2 * pow(2*PI*bulk.effMassElectron*BOLTZMANN_CONSTANT*env.temperature, 1.5) / pow(PLACK_CONSTANT, 3);
+    double density_of_states = 2 * pow(2*PI*bulk.effElectronMass*BOLTZMANN_CONSTANT*env.temperature, 1.5) / pow(PLACK_CONSTANT, 3);
 
     double r = (Ec - fermi_lvl) / env.thermal_potential;
 
@@ -152,7 +152,7 @@ double bulkHoles(Bulk bulk, const double fermi_lvl, const double Ev, const Envir
     // 2 strategies: if Ec - Ef > thermal_potential: use polylogarithm power series
     // if Ec - Ef < thermal_potential: use fermi-dirac function power series
 
-    double density_of_states = 2 * pow(2*PI*bulk.effMassHoles*BOLTZMANN_CONSTANT*env.temperature, 1.5) / pow(PLACK_CONSTANT, 3);
+    double density_of_states = 2 * pow(2*PI*bulk.effHoleMass*BOLTZMANN_CONSTANT*env.temperature, 1.5) / pow(PLACK_CONSTANT, 3);
 
     double r = (fermi_lvl - Ev) / env.thermal_potential;
 
@@ -175,7 +175,7 @@ double bulkElectronsD(Bulk bulk, const double fermi_lvl, const double Ec, const 
     // 2 strategies: if Ec - Ef > thermal_potential: use polylogarithm power series
     // if Ec - Ef < thermal_potential: use fermi-dirac function power series
 
-    double density_of_states = 2 * pow(2*PI*bulk.effMassElectron*BOLTZMANN_CONSTANT*env.temperature, 1.5) / pow(PLACK_CONSTANT, 3);
+    double density_of_states = 2 * pow(2*PI*bulk.effElectronMass*BOLTZMANN_CONSTANT*env.temperature, 1.5) / pow(PLACK_CONSTANT, 3);
 
     double r = (Ec - fermi_lvl) / env.thermal_potential;
 
@@ -197,7 +197,7 @@ double bulkHolesD(Bulk bulk, const double fermi_lvl, const double Ev, const Envi
     // 2 strategies: if Ec - Ef > thermal_potential: use polylogarithm power series
     // if Ec - Ef < thermal_potential: use fermi-dirac function power series
 
-    double density_of_states = 2 * pow(2*PI*bulk.effMassHoles*BOLTZMANN_CONSTANT*env.temperature, 1.5) / pow(PLACK_CONSTANT, 3);
+    double density_of_states = 2 * pow(2*PI*bulk.effHoleMass*BOLTZMANN_CONSTANT*env.temperature, 1.5) / pow(PLACK_CONSTANT, 3);
 
     double r = (fermi_lvl - Ev) / env.thermal_potential;
 

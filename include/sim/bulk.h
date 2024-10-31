@@ -9,10 +9,14 @@
 // Bulk Semiconductor properties
 typedef struct Bulk
 {
-    double epsilon; // in SI
-    double bandgap; // in eV
-    double effMassElectron; // in SI
-    double effMassHoles; // in SI
+    // in SI
+    double epsilon;
+    // in eV
+    double bandgap;
+     // in SI
+    double effElectronMass;
+     // in SI
+    double effHoleMass;
 } Bulk;
 
 // fermi-level, and Ec should be in eV, tolerance is (max) relative error permitted

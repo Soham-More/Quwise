@@ -1,4 +1,4 @@
-#include <include/sim/donor.h>
+#include <include/sim/dopant.h>
 
 #include <math.h>
 #include <include/utils.h>
