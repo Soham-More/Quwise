@@ -1,2 +1,3 @@
 build/*
 *.pyvi
+**/__pycache__/
