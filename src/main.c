@@ -280,8 +280,8 @@ int main()
         vecSub(V, accum, &accum);
 
         //vecCopy(V, &mesh.potential);
-        fxInterpolateSample1D(fxPotential, mesh.x, &mesh_test);
-        //meshPoissonEvaluate(mesh, silicon.epsilon, &mesh_test);
+        fxInterpolateSample1D(fxPotential, mesh.x, &mesh.potential);
+        meshPoissonEvaluate(mesh, silicon.epsilon, &mesh_test);
 
         pyviSectionPush(pyvi_pot, V);
         pyviSectionPush(pyvi_ch, rho);
