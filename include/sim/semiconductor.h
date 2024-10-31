@@ -6,6 +6,9 @@
 #include "bulk.h"
 #include <include/fem/mesh.h>
 
+#define SC_SOLVE_FERMI 0x1
+#define SC_SOLVE_EC 0x2
+
 typedef struct SemiConductor
 {
     Bulk bulk;
@@ -41,6 +44,8 @@ double scTotalQ(SemiConductor sc, const double x, const double fermi_lvl, const 
 
 void scVecTotalQ(SemiConductor sc, const Vec fermi_lvl, const Vec Ec, Environment env, Vec* net_charge);
 void scVecTotalQD(SemiConductor sc, const Vec fermi_lvl, const Vec Ec, Environment env, Vec* net_charge_d);
+
+double scSolveBoundary(SemiConductor sc, const double x, const double E, uint8_t flags);
 
 void freeSemiConductor(SemiConductor* sc);
 
