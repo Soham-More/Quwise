@@ -23,10 +23,6 @@ typedef struct Mesh
     // the value of potential at boundaries
     double v0;
     double v1;
-
-    // general info
-    //double maxSpacing;
-    //double minSpacing;
 } Mesh;
 
 // initialize the grid with piecewise uniform sampling

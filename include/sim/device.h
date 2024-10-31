@@ -4,10 +4,10 @@
 #include <math/stack.h>
 #include <math/linalg.h>
 
-#include <include/functions.h>
-#include <include/material.h>
+#include <include/fem/functions.h>
+#include "material.h"
 
-#include <include/mesh.h>
+#include <include/fem/mesh.h>
 
 typedef struct DeviceState
 {

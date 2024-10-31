@@ -1,4 +1,4 @@
-#include <include/mesh.h>
+#include <include/fem/mesh.h>
 
 // initialize the grid with piecewise uniform sampling
 Mesh meshInitPieceUniformA(Vec ranges, size_t sampleCount[], size_t count)

@@ -1,9 +1,10 @@
 #pragma once
 #include <stdint.h>
 
-#include <include/sim.h>
 #include <math/linalg.h>
-#include <include/functions.h>
+
+#include <include/sim.h>
+#include <include/fem/functions.h>
 
 // Bulk Semiconductor properties
 typedef struct Bulk

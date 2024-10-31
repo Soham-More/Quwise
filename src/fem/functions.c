@@ -1,4 +1,4 @@
-#include <include/functions.h>
+#include <include/fem/functions.h>
 #include <math.h>
 
 double interp_linear(Vec values, Vec x, double x_eval)

@@ -6,12 +6,12 @@
 #include <math/linalg.h>
 #include <include/poisson.h>
 
-#include <include/functions.h>
-#include <include/material.h>
+#include <include/fem/functions.h>
+#include <include/sim/material.h>
 
 #include <math/pyvisual.h>
 
-#include <include/mesh.h>
+#include <include/fem/mesh.h>
 
 double bulkNetCharge(Bulk bulk, Dopant* dopants, size_t dopant_count, const double x, const double fermi_lvl, const double Ec, SimParameters simParams)
 {
