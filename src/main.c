@@ -11,6 +11,8 @@
 
 #include <include/pyvisual.h>
 
+#include <include/mesh.h>
+
 double bulkNetCharge(Bulk bulk, Dopant* dopants, size_t dopant_count, const double x, const double fermi_lvl, const double Ec, SimParameters simParams)
 {
     double charge = -ELECTRON_CHARGE * bulkElectronConcSingle(bulk, fermi_lvl, Ec, simParams.temperature, simParams.tol_conc);
@@ -215,6 +217,15 @@ int main()
     PyViSection* pyvi_res = pyviCreateSection(&pyvi, "residual", pos);
     PyViSection* pyvi_J = pyviCreateSection(&pyvi, "Jacobian", pos);
     PyViSection* pyvi_F = pyviCreateSection(&pyvi, "Fermi lvl", pos);
+    PyViSection* pyvi_M = pyviCreateSection(&pyvi, "Mesh Test", pos);
+
+    Mesh mesh = meshInitPieceUniformA(
+        vecConstruct((double[]){0.0, 0.2e-5}, 2),
+        (size_t[]){N},
+        1
+    );
+
+    meshSetDirichletBC(&mesh, 0.0, -Ec);
 
     // setup initial guess
 
@@ -233,6 +244,7 @@ int main()
 
     
     Vec accum = vecInitZerosA(N);
+    Vec mesh_test = vecInitZerosA(N);
     //poissonEvaluate(V, &accum, 0.0, -Ec, silicon.epsilon, simParams.spacing);
     //vecScale(silicon.epsilon / (simParams.spacing*simParams.spacing), accum, &accum);
 
@@ -242,7 +254,10 @@ int main()
     pyviSectionPush(pyvi_J, diag_jacobian);
     pyviSectionPush(pyvi_F, fermi_lvl_vec);
     pyviSectionPush(pyvi_res, accum);
+    pyviSectionPush(pyvi_M, mesh_test);
 
+    vecPrint(mesh.dx);
+    printf("\n");
 
     for(size_t i = 0; i < 10; i++)
     {
@@ -262,12 +277,16 @@ int main()
         solveTridiagonalSymm(accum, subdiag_jacobian, diag_jacobian, scratch);
         vecSub(V, accum, &accum);
 
+        vecCopy(V, &mesh.potential);
+        meshPoissonEvaluate(mesh, silicon.epsilon, &mesh_test);
+
         pyviSectionPush(pyvi_pot, V);
         pyviSectionPush(pyvi_ch, rho);
         pyviSectionPush(pyvi_chd, rho_d);
         pyviSectionPush(pyvi_J, diag_jacobian);
         pyviSectionPush(pyvi_F, fermi_lvl_vec);
         pyviSectionPush(pyvi_res, accum);
+        pyviSectionPush(pyvi_M, mesh_test);
 
         // set V to new value
         vecCopy(accum, &V);

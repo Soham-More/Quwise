@@ -78,9 +78,9 @@ void vecPrint(Vec a)
     printf("[");
     for(size_t i = 0; i < a.len - 1; i++)
     {
-        printf("%lf, ", LA_VIDX(a, i));
+        printf("%le, ", LA_VIDX(a, i));
     }
-    printf("%lf]", LA_VIDX(a, a.len - 1));
+    printf("%le]", LA_VIDX(a, a.len - 1));
 }
 
 // gets the nth value in a vector

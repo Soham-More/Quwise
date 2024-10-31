@@ -31,7 +31,7 @@ Mesh meshInitPieceUniformA(Vec ranges, size_t sampleCount[], size_t count)
     double spacing = interval / (double)(sampleCount[count - 1] + 2);
     double samples = (double)(sampleCount[count - 1] + 2);
 
-    for(size_t i = 0; i < sampleCount[i]; i++)
+    for(size_t i = 0; i < sampleCount[count - 1]; i++)
     {
         VEC_INDEX(mesh.x, point_count) = VEC_INDEX(ranges, count - 1) + interval * ((double)(i + 1) / samples);
         if(point_count > 0) VEC_INDEX(mesh.dx, point_count - 1) = spacing;
@@ -104,7 +104,7 @@ void meshSecondDerivative(Mesh mesh, Vec var, double boundaries[2], Vec* out)
 // evaluate the poisson equation
 void meshPoissonEvaluate(Mesh mesh, double epsilon, Vec* rho)
 {
-    meshSecondDerivative(mesh, mesh.potential, (double[2]){mesh.v0, mesh.v1}, &rho);
+    meshSecondDerivative(mesh, mesh.potential, (double[2]){mesh.v0, mesh.v1}, rho);
     vecScale(-epsilon, *rho, rho);
 }
 
