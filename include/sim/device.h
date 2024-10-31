@@ -4,11 +4,10 @@
 #include <math/stack.h>
 #include <math/linalg.h>
 
-#include <include/fem/functions.h>
-#include "material.h"
+#include "bulk.h"
+#include <include/fem.h>
 
-#include <include/fem/mesh.h>
-
+// represents the state of a device
 typedef struct DeviceState
 {
     // potential
@@ -41,5 +40,4 @@ typedef struct Device
 } Device;
 
 ;
-
 
