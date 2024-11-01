@@ -41,7 +41,7 @@ int main()
     freeMat2D(&scratch);
     */
 
-    size_t N = 1 << 5;
+    size_t N = 1 << 6;
 
     double length = 0.2e-5;
     double n_doping = 1e21;
@@ -50,7 +50,7 @@ int main()
     // make a simulation setup
     Environment env;
     env.temperature = 300;
-    env.tol_potential = 1e-4;
+    env.tol_potential = 1e-6;
     env.tol_conc = 1e-6;
     env = envPopulate(env);
 
@@ -84,19 +84,20 @@ int main()
     printf("x_n: %le\n", xn - length/2.0);
     printf("x_p: %le\n", xp - length/2.0);
 
-/*
+
     Mesh mesh = meshInitPieceUniformA(
-        vecConstruct((double[]){0.0, xp, xn, length}, 4),
-        (size_t[]){N / 8,  3 * (N / 4), N / 8},
+        vecConstruct((double[]){0.0, length / 2 - 0.1e-5, length / 2 + 0.1e-5, length}, 4),
+        (size_t[]){N / 4, N / 2 + 1, N / 4 - 1},
         3
     );
-*/
+
+/*
     Mesh mesh = meshInitPieceUniformA(
         vecConstruct((double[]){0.0, length}, 2),
         (size_t[]){N},
         1
     );
-
+*/
     scDopeAcceptor(&silicon, mesh, boronInfo);
     scDopeDonor(&silicon, mesh, phosphorousInfo);
 
@@ -155,7 +156,7 @@ int main()
         scVecTotalQD(silicon, fermi_lvl, Ec_vec, &rho_d);
         triDiagAddDiagonalSelf(&jacobian, rho_d);
 
-        pyviSectionPush(pyvi_J, jacobian.superdiagonal);
+        pyviSectionPush(pyvi_J, mesh.dx);
 
         triDiagSolveDestructive(&jacobian, &accum);
         vecSub(mesh.potential, accum, &accum);

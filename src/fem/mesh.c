@@ -40,6 +40,12 @@ Mesh meshInitPieceUniformA(Vec ranges, size_t sampleCount[], size_t count)
     }
     if(point_count > 0) VEC_INDEX(mesh.dx, point_count - 1) = spacing;
 
+    for(size_t i = 0; i < mesh.len - 1; i++)
+    {
+        VEC_INDEX(mesh.dx, i) = VEC_INDEX(mesh.x, i + 1) - VEC_INDEX(mesh.x, i);
+    }
+    VEC_INDEX(mesh.dx, mesh.len - 1) = mesh.max - VEC_INDEX(mesh.x, mesh.len - 1);
+
     mesh.jacobianD2 = triDiagInitZeroA(mesh.len);
 
     // Calculate the jacobian of poission equation
