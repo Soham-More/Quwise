@@ -20,9 +20,9 @@ typedef struct Dopant
 } Dopant;
 
 // allocates memory
-Dopant dopantInitAcceptor1DA(Fx1D conc, Vec mesh, const double Ed_Ev, const double degeneracy, Bulk bulk, Environment env);
+Dopant dopantInitAcceptor1DA(Fx1D conc, Vec mesh, const double Ed_Ev, const double degeneracy, Bulk bulk);
 // allocates memory
-Dopant dopantInitDonor1DA(Fx1D conc, Vec mesh, const double Ec_Ed, const double degeneracy, Bulk bulk, Environment env);
+Dopant dopantInitDonor1DA(Fx1D conc, Vec mesh, const double Ec_Ed, const double degeneracy, Bulk bulk);
 
 // calculate the amount of dopant ionized
 double dopantIonizedConc(const Dopant dopant, const double fermi_lvl, const double Ec, const double x, Environment env);

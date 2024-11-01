@@ -132,7 +132,7 @@ void meshPoissonEvaluate(Mesh mesh, double epsilon, Vec* rho)
 }
 
 // get the jacobian of poission equation
-void meshPoissonJacobian(Mesh mesh, double epsilon, Vec* jacobian)
+void meshPoissonJacobian(Mesh mesh, double epsilon, MatTriDiag* jacobian)
 {
     triDiagScale(-epsilon, mesh.jacobianD2, jacobian);
 }

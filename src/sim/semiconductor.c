@@ -23,7 +23,7 @@ void scDopeAcceptor(SemiConductor* sc, Mesh mesh, const DopantInfo dopantInfo)
 {
     Fx1D conc = fxConstruct1D(dopantInfo.sampled_conc, dopantInfo.sampled_x, dopantInfo.samplingMode);
 
-    Dopant acceptor = dopantInitAcceptor1DA(conc, mesh.x, dopantInfo.delE, dopantInfo.degeneracy, sc->bulk, sc->env);
+    Dopant acceptor = dopantInitAcceptor1DA(conc, mesh.x, dopantInfo.delE, dopantInfo.degeneracy, sc->bulk);
 
     dynStackPush(&sc->dopants, &acceptor);
 }
@@ -31,7 +31,7 @@ void scDopeDonor(SemiConductor* sc, Mesh mesh, const DopantInfo dopantInfo)
 {
     Fx1D conc = fxConstruct1D(dopantInfo.sampled_conc, dopantInfo.sampled_x, dopantInfo.samplingMode);
 
-    Dopant acceptor = dopantInitDonor1DA(conc, mesh.x, dopantInfo.delE, dopantInfo.degeneracy, sc->bulk, sc->env);
+    Dopant acceptor = dopantInitDonor1DA(conc, mesh.x, dopantInfo.delE, dopantInfo.degeneracy, sc->bulk);
 
     dynStackPush(&sc->dopants, &acceptor);
 }
@@ -166,7 +166,7 @@ double scSolveBoundary(SemiConductor sc, const double x, const double E, uint8_t
     if(flags & SC_SOLVE_EC) return scSolveBEC(sc, x, E);
     if(flags & SC_SOLVE_FERMI) return scSolveBEF(sc, x, E);
     
-    printf("[Semiconductor] Error: scSolveBoundary flags is invalid %zu", flags);
+    printf("[Semiconductor] Error: scSolveBoundary flags is invalid %u", flags);
     return NAN;
 }
 

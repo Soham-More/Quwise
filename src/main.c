@@ -165,5 +165,4 @@ int main()
 
     freePyVi(&pyvi);
     freeMesh(&mesh);
-    freeSim(&env);
 }

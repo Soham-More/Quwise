@@ -6,7 +6,7 @@
 #define DOPANT_HOLE 0x1
 #define DOPANT_ELECTRON 0x2
 
-Dopant dopantInitAcceptor1DA(Fx1D conc, Vec mesh, const double Ed_Ev, const double degeneracy, const Bulk bulk, Environment env)
+Dopant dopantInitAcceptor1DA(Fx1D conc, Vec mesh, const double Ed_Ev, const double degeneracy, const Bulk bulk)
 {
     Dopant dopant;
     dopant.delE = Ed_Ev;
@@ -20,7 +20,7 @@ Dopant dopantInitAcceptor1DA(Fx1D conc, Vec mesh, const double Ed_Ev, const doub
 
     return dopant;
 }
-Dopant dopantInitDonor1DA(Fx1D conc, Vec mesh, const double Ec_Ed, const double degeneracy, const Bulk bulk, Environment env)
+Dopant dopantInitDonor1DA(Fx1D conc, Vec mesh, const double Ec_Ed, const double degeneracy, const Bulk bulk)
 {
     Dopant dopant;
     dopant.delE = Ec_Ed;

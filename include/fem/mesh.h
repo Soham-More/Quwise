@@ -49,6 +49,6 @@ void meshSecondDerivative(Mesh mesh, Vec var, double boundaries[2], Vec* out);
 void meshPoissonEvaluate(Mesh mesh, double epsilon, Vec* rho);
 
 // get the jacobian of poission equation
-void meshPoissonJacobian(Mesh mesh, double epsilon, Vec* jacobian);
+void meshPoissonJacobian(Mesh mesh, double epsilon, MatTriDiag* jacobian);
 
 void freeMesh(Mesh* mesh);
