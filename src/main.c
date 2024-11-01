@@ -41,9 +41,9 @@ int main()
     freeMat2D(&scratch);
     */
 
-    size_t N = 1 << 8;
+    size_t N = 1 << 5;
 
-    double length = 2e-5;
+    double length = 0.2e-5;
     double n_doping = 1e21;
     double p_doping = 1e21;
 
@@ -71,7 +71,7 @@ int main()
     boronInfo.sampled_conc = vecConstruct((double[]){p_doping, 0.0}, 2);
     boronInfo.sampled_x    = vecConstruct((double[]){0.0 , length}, 2);
     boronInfo.delE = 0.045;
-    boronInfo.degeneracy = 2;
+    boronInfo.degeneracy = 4;
     boronInfo.samplingMode = INTERP_NEAREST;
 
     SemiConductor silicon = scInit(siliconInfo, env);
@@ -84,18 +84,25 @@ int main()
     printf("x_n: %le\n", xn - length/2.0);
     printf("x_p: %le\n", xp - length/2.0);
 
+/*
     Mesh mesh = meshInitPieceUniformA(
-        vecConstruct((double[]){0.0, xp, xn, 0.2e-5}, 4),
+        vecConstruct((double[]){0.0, xp, xn, length}, 4),
         (size_t[]){N / 8,  3 * (N / 4), N / 8},
         3
     );
+*/
+    Mesh mesh = meshInitPieceUniformA(
+        vecConstruct((double[]){0.0, length}, 2),
+        (size_t[]){N},
+        1
+    );
 
-    scDopeAcceptor(&silicon, mesh, phosphorousInfo);
-    scDopeDonor(&silicon, mesh, boronInfo);
+    scDopeAcceptor(&silicon, mesh, boronInfo);
+    scDopeDonor(&silicon, mesh, phosphorousInfo);
 
     // solve for actual fermi and conduction level
     double boundary_ef = scSolveBoundary(silicon, 0.0, 0.0, SC_SOLVE_FERMI);
-    double boundary_ec = scSolveBoundary(silicon, 0.0, boundary_ef, SC_SOLVE_EC);
+    double boundary_ec = scSolveBoundary(silicon, length, boundary_ef, SC_SOLVE_EC);
 
     printf("Fermi-Level: %lf eV\n", boundary_ef);
     printf("Built-in Potential: %lf V\n", -boundary_ec);
@@ -122,19 +129,19 @@ int main()
     PyViSec pyvi_ch = pyviCreateSection(&pyvi, "charge", pos);
     PyViSec pyvi_chd = pyviCreateSection(&pyvi, "charge derivative", pos);
     PyViSec pyvi_res = pyviCreateSection(&pyvi, "residual", pos);
-    //PyViSec pyvi_J = pyviCreateSection(&pyvi, "Jacobian", pos);
+    PyViSec pyvi_J = pyviCreateSection(&pyvi, "Jacobian", pos);
     //PyViSec pyvi_F = pyviCreateSection(&pyvi, "Fermi lvl", pos);
 
     pyviSectionPush(pyvi_pot, mesh.potential);
     pyviSectionPush(pyvi_ch, rho);
     pyviSectionPush(pyvi_chd, rho_d);
-    //pyviSectionPush(pyvi_J, diag_jacobian);
+    pyviSectionPush(pyvi_J, jacobian.superdiagonal);
     pyviSectionPush(pyvi_res, accum);
 
     vecPrint(mesh.dx);
     printf(":len = %zu\n", mesh.len);
 
-    for(size_t i = 0; i < 10; i++)
+    for(size_t i = 0; i < 20; i++)
     {
         Vec ch_scaled = vecInitZerosA(N);
 
@@ -146,7 +153,9 @@ int main()
 
         meshPoissonJacobian(mesh, silicon.bulk.epsilon, &jacobian);
         scVecTotalQD(silicon, fermi_lvl, Ec_vec, &rho_d);
-        triDiagSubDiagonalSelf(&jacobian, rho_d);
+        triDiagAddDiagonalSelf(&jacobian, rho_d);
+
+        pyviSectionPush(pyvi_J, jacobian.superdiagonal);
 
         triDiagSolveDestructive(&jacobian, &accum);
         vecSub(mesh.potential, accum, &accum);
