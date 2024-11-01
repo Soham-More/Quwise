@@ -12,6 +12,9 @@ typedef struct Mesh
     Vec dx;
     // potential at each point
     Vec potential;
+    // the jacobian of poission equation
+    // wrt potential
+    MatTriDiag jacobianD2;
 
     // size of mesh
     size_t len;
@@ -44,5 +47,8 @@ void meshSecondDerivative(Mesh mesh, Vec var, double boundaries[2], Vec* out);
 
 // evaluate the poisson equation
 void meshPoissonEvaluate(Mesh mesh, double epsilon, Vec* rho);
+
+// get the jacobian of poission equation
+void meshPoissonJacobian(Mesh mesh, double epsilon, Vec* jacobian);
 
 void freeMesh(Mesh* mesh);

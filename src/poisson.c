@@ -72,3 +72,24 @@ void toPoissonChargeVec(Vec rho, const double epsilon, const double left_boundar
     VEC_INDEX(*poisson_charge_vec, poisson_charge_vec->len - 1) += right_boundary;
 }
 
+void solveTridiagonal(Vec x, Vec subdiag, Vec diag, Vec superdiag, Vec scratch)
+{
+    VEC_INDEX(scratch, 0) = VEC_INDEX(superdiag, 0) / VEC_INDEX(diag, 0);
+    VEC_INDEX(x, 0) = VEC_INDEX(x, 0) / VEC_INDEX(diag, 0);
+
+    for (int ix = 1; ix < diag.len; ix++)
+    {
+        if (ix < diag.len-1)
+        {
+            VEC_INDEX(scratch, ix) = VEC_INDEX(superdiag, ix) / (VEC_INDEX(diag, ix) - VEC_INDEX(subdiag, ix) * VEC_INDEX(scratch, ix - 1));
+        }
+        VEC_INDEX(x, ix) = (VEC_INDEX(x, ix) - VEC_INDEX(subdiag, ix) * VEC_INDEX(x, ix - 1)) / (VEC_INDEX(diag, ix) - VEC_INDEX(subdiag, ix) * VEC_INDEX(scratch, ix-1));
+    }
+
+    for (size_t ix = diag.len - 2; ix > 0; ix--)
+    {
+        VEC_INDEX(x, ix) -= VEC_INDEX(scratch, ix) * VEC_INDEX(x, ix + 1);
+    }
+    VEC_INDEX(x, 0) -= VEC_INDEX(scratch, 0) * VEC_INDEX(x, 1);
+}
+

@@ -18,6 +18,29 @@
 
 int main()
 {
+    /*
+    Mat2d scratch = mat2DInitZerosA(5, 6);
+    Mat2d matrix = mat2DConstruct((double[]){
+         2.0,-1.0, 0.0, 0.0, 0.0,
+        -3.0, 2.0,-1.0, 0.0, 0.0,
+         0.0,-1.0, 2.0,-1.0, 0.0,
+         0.0, 0.0,-1.0, 2.0,-1.0,
+         0.0, 0.0, 0.0,-1.0, 2.0,
+    }, 5, 5);
+
+    size_t arr[] = {0.0, 0.0, 0.0, 0.0, 0.0};
+
+    Vec ones = vecInitOnesA(5);
+    Vec ans  = vecInitOnesA(5);
+
+    mat2DSqSolve(matrix, ones, &scratch, arr, &ans);
+
+    vecPrint(ans);
+    printf("\n");
+
+    freeMat2D(&scratch);
+    */
+
     size_t N = 1 << 8;
 
     double length = 2e-5;
@@ -87,9 +110,8 @@ int main()
     Vec Ec_vec = vecInitZerosA(N);
     Vec res = vecInitZerosA(N);
 
-    Vec subdiag_jacobian = vecInitA(-1, N);
-    Vec ref_diag_jacobian = vecInitA(2.0, N);
-    Vec diag_jacobian = vecInitA(0.0, N);
+    MatTriDiag jacobian = triDiagInitZeroA(N);
+    Vec accum = vecInitZerosA(N);
 
     Vec scratch = vecInitZerosA(N);
 
@@ -100,16 +122,13 @@ int main()
     PyViSec pyvi_ch = pyviCreateSection(&pyvi, "charge", pos);
     PyViSec pyvi_chd = pyviCreateSection(&pyvi, "charge derivative", pos);
     PyViSec pyvi_res = pyviCreateSection(&pyvi, "residual", pos);
-    PyViSec pyvi_J = pyviCreateSection(&pyvi, "Jacobian", pos);
-    PyViSec pyvi_F = pyviCreateSection(&pyvi, "Fermi lvl", pos);
-
-    // setup initial guess
-    Vec accum = vecInitZerosA(N);
+    //PyViSec pyvi_J = pyviCreateSection(&pyvi, "Jacobian", pos);
+    //PyViSec pyvi_F = pyviCreateSection(&pyvi, "Fermi lvl", pos);
 
     pyviSectionPush(pyvi_pot, mesh.potential);
     pyviSectionPush(pyvi_ch, rho);
     pyviSectionPush(pyvi_chd, rho_d);
-    pyviSectionPush(pyvi_J, diag_jacobian);
+    //pyviSectionPush(pyvi_J, diag_jacobian);
     pyviSectionPush(pyvi_res, accum);
 
     vecPrint(mesh.dx);
@@ -122,40 +141,29 @@ int main()
         vecScale(-1, mesh.potential, &Ec_vec);
         meshPoissonEvaluate(mesh, silicon.bulk.epsilon, &accum);
 
-        scTotalQV(silicon, fermi_lvl, Ec_vec, env, &rho);
+        scVecTotalQ(silicon, fermi_lvl, Ec_vec, &rho);
         vecSub(accum, rho, &accum);
 
-        bulkNetChargeVecDerivative(siliconInfo, dopants, 2, fermi_lvl_vec, Ec_vec, env, &rho_d);
-        vecScale(env.spacing*env.spacing / siliconInfo.epsilon, rho_d, &ch_scaled);
-        vecAdd(ref_diag_jacobian, ch_scaled, &diag_jacobian);
+        meshPoissonJacobian(mesh, silicon.bulk.epsilon, &jacobian);
+        scVecTotalQD(silicon, fermi_lvl, Ec_vec, &rho_d);
+        triDiagSubDiagonalSelf(&jacobian, rho_d);
 
-        solveTridiagonalSymm(accum, subdiag_jacobian, diag_jacobian, scratch);
-        vecSub(V, accum, &accum);
+        triDiagSolveDestructive(&jacobian, &accum);
+        vecSub(mesh.potential, accum, &accum);
 
-        //vecCopy(V, &mesh.potential);
-        fxInterpolateSample1D(fxPotential, mesh.x, &mesh.potential);
-        meshPoissonEvaluate(mesh, siliconInfo.epsilon, &mesh_test);
-
-        pyviSectionPush(pyvi_pot, V);
+        pyviSectionPush(pyvi_pot, mesh.potential);
         pyviSectionPush(pyvi_ch, rho);
         pyviSectionPush(pyvi_chd, rho_d);
-        pyviSectionPush(pyvi_J, diag_jacobian);
-        pyviSectionPush(pyvi_F, fermi_lvl_vec);
+        //pyviSectionPush(pyvi_J, diag_jacobian);
         pyviSectionPush(pyvi_res, accum);
-        pyviSectionPush(pyvi_M, mesh_test);
 
         // set V to new value
-        vecCopy(accum, &V);
+        vecCopy(accum, &mesh.potential);
     }
 
     pyviWrite(pyvi);
 
     freePyVi(&pyvi);
-
     freeMesh(&mesh);
-
-    freeDopant(&phosphorous);
-    freeDopant(&boron);
-
     freeSim(&env);
 }

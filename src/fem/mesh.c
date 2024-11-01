@@ -14,6 +14,7 @@ Mesh meshInitPieceUniformA(Vec ranges, size_t sampleCount[], size_t count)
     mesh.min = VEC_INDEX(ranges, 0);
     mesh.max = VEC_INDEX(ranges, count);
 
+    // populate the mesh
     size_t point_count = 0;
     for(size_t i = 0; i < count - 1; i++)
     {
@@ -38,6 +39,28 @@ Mesh meshInitPieceUniformA(Vec ranges, size_t sampleCount[], size_t count)
         point_count++;
     }
     if(point_count > 0) VEC_INDEX(mesh.dx, point_count - 1) = spacing;
+
+    mesh.jacobianD2 = triDiagInitZeroA(mesh.len);
+
+    // Calculate the jacobian of poission equation
+    double h = (VEC_INDEX(mesh.dx, 0) - mesh.min) + VEC_INDEX(mesh.dx, 0);
+    double h_eff = (VEC_INDEX(mesh.dx, 0) - mesh.min) * VEC_INDEX(mesh.dx, 0);
+    VEC_INDEX(mesh.jacobianD2.diagonal, 0) = -2.0 / h_eff;
+    VEC_INDEX(mesh.jacobianD2.superdiagonal, 0) = 2.0 / ( VEC_INDEX(mesh.dx, 0) * h );
+    
+    for(size_t i = 1; i < mesh.len - 1; i++)
+    {
+        h = VEC_INDEX(mesh.dx, i - 1) + VEC_INDEX(mesh.dx, i);
+        h_eff = VEC_INDEX(mesh.dx, i - 1) * VEC_INDEX(mesh.dx, i);
+        VEC_INDEX(mesh.jacobianD2.subdiagonal, i - 1) = 2.0 / ( VEC_INDEX(mesh.dx, i - 1) * h );
+        VEC_INDEX(mesh.jacobianD2.diagonal, i) = -2.0 /  h_eff;
+        VEC_INDEX(mesh.jacobianD2.superdiagonal, i) = 2.0 / ( VEC_INDEX(mesh.dx, i) * h );
+    }
+
+    h = VEC_INDEX(mesh.dx, mesh.len - 2) + VEC_INDEX(mesh.dx, mesh.len - 1);
+    h_eff = VEC_INDEX(mesh.dx, mesh.len - 2) * VEC_INDEX(mesh.dx, mesh.len - 1);
+    VEC_INDEX(mesh.jacobianD2.subdiagonal, mesh.len - 2) = 2.0 / ( VEC_INDEX(mesh.dx, mesh.len - 2) * h );
+    VEC_INDEX(mesh.jacobianD2.diagonal, mesh.len - 1) = -2.0 /  h_eff;
 
     return mesh;
 }
@@ -106,6 +129,12 @@ void meshPoissonEvaluate(Mesh mesh, double epsilon, Vec* rho)
 {
     meshSecondDerivative(mesh, mesh.potential, (double[2]){mesh.v0, mesh.v1}, rho);
     vecScale(-epsilon, *rho, rho);
+}
+
+// get the jacobian of poission equation
+void meshPoissonJacobian(Mesh mesh, double epsilon, Vec* jacobian)
+{
+    triDiagScale(-epsilon, mesh.jacobianD2, jacobian);
 }
 
 void freeMesh(Mesh* mesh)
