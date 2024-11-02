@@ -188,23 +188,22 @@ int main()
         // set V to new value
         if(i < 10)
         {
-            w = 1.0;
+            w = 2.0;
         }
         else if(i > 40)
         {
-            w = 1.0;
+            w = 0.2;
         }
         // make it converge faster
         else
         {
-            w = 1.0;
+            w = 2.0;
         }
-        /*
         vecScale( w, accum, &accum);
         vecScale(1 - w, mesh.potential, &mesh.potential);
         vecAdd(accum, mesh.potential, &mesh.potential);
-        */
-        vecCopy(accum, &mesh.potential);
+        
+        //vecCopy(accum, &mesh.potential);
     }
 
     pyviWrite(pyvi);
