@@ -41,9 +41,9 @@ int main()
     freeMat2D(&scratch);
     */
 
-    size_t N = 1 << 6;
+    size_t N = 1 << 8;
 
-    double length = 0.2e-5;
+    double length = 1e-5;
     double n_doping = 1e21;
     double p_doping = 1e21;
 
@@ -84,10 +84,9 @@ int main()
     printf("x_n: %le\n", xn - length/2.0);
     printf("x_p: %le\n", xp - length/2.0);
 
-
     Mesh mesh = meshInitPieceUniformA(
         vecConstruct((double[]){0.0, length / 2 - 0.1e-5, length / 2 + 0.1e-5, length}, 4),
-        (size_t[]){N / 4, N / 2 + 1, N / 4 - 1},
+        (size_t[]){N / 8, 3 * (N / 4) + 1, N / 8 - 1},
         3
     );
 
@@ -104,6 +103,9 @@ int main()
     // solve for actual fermi and conduction level
     double boundary_ef = scSolveBoundary(silicon, 0.0, 0.0, SC_SOLVE_FERMI);
     double boundary_ec = scSolveBoundary(silicon, length, boundary_ef, SC_SOLVE_EC);
+
+    double n0 = bulkElectrons(silicon.bulk, boundary_ef, 0.0, env);
+    double p0 = bulkHoles(silicon.bulk, boundary_ef, -silicon.bulk.bandgap, env);
 
     printf("Fermi-Level: %lf eV\n", boundary_ef);
     printf("Built-in Potential: %lf V\n", -boundary_ec);
@@ -142,18 +144,32 @@ int main()
     vecPrint(mesh.dx);
     printf(":len = %zu\n", mesh.len);
 
-    for(size_t i = 0; i < 20; i++)
+    for(size_t i = 0; i < 200; i++)
     {
         Vec ch_scaled = vecInitZerosA(N);
 
         vecScale(-1, mesh.potential, &Ec_vec);
         meshPoissonEvaluate(mesh, silicon.bulk.epsilon, &accum);
 
-        scVecTotalQ(silicon, fermi_lvl, Ec_vec, &rho);
+        // calculate the total charge
+        for(size_t k = 0; k < mesh.len; k++)
+        {
+            VEC_INDEX(rho, k) = -ELECTRON_CHARGE * n0 * exp( VEC_INDEX(mesh.potential, k) / env.thermal_potential );
+            VEC_INDEX(rho, k) += ELECTRON_CHARGE * p0 * exp( -VEC_INDEX(mesh.potential, k) / env.thermal_potential );
+        }
+        scVecTotalQSS(silicon, fermi_lvl, Ec_vec, &rho);
         vecSub(accum, rho, &accum);
 
         meshPoissonJacobian(mesh, silicon.bulk.epsilon, &jacobian);
-        scVecTotalQD(silicon, fermi_lvl, Ec_vec, &rho_d);
+        //scVecTotalQD(silicon, fermi_lvl, Ec_vec, &rho_d);
+
+        // calculate the total charge derivative wrt potential
+        for(size_t k = 0; k < mesh.len; k++)
+        {
+            VEC_INDEX(rho_d, k) = ELECTRON_CHARGE * n0 * exp( VEC_INDEX(mesh.potential, k) / env.thermal_potential ) / env.thermal_potential;
+            VEC_INDEX(rho_d, k) += ELECTRON_CHARGE * p0 * exp( -VEC_INDEX(mesh.potential, k) / env.thermal_potential ) / env.thermal_potential;
+        }
+        //scVecTotalQSSD(silicon, fermi_lvl, Ec_vec, &rho_d);
         triDiagAddDiagonalSelf(&jacobian, rho_d);
 
         pyviSectionPush(pyvi_J, mesh.dx);
@@ -167,7 +183,27 @@ int main()
         //pyviSectionPush(pyvi_J, diag_jacobian);
         pyviSectionPush(pyvi_res, accum);
 
+        double w = 1.0;
+
         // set V to new value
+        if(i < 10)
+        {
+            w = 1.0;
+        }
+        else if(i > 40)
+        {
+            w = 1.0;
+        }
+        // make it converge faster
+        else
+        {
+            w = 1.0;
+        }
+        /*
+        vecScale( w, accum, &accum);
+        vecScale(1 - w, mesh.potential, &mesh.potential);
+        vecAdd(accum, mesh.potential, &mesh.potential);
+        */
         vecCopy(accum, &mesh.potential);
     }
 

@@ -77,6 +77,27 @@ double dopantIonized(const Dopant dopant, const double fermi_lvl, const double E
     printf("Warning: invalid dopant type 0x%x\n", dopant.type);
     return NAN;
 }
+// calculate the the charge conc due to dopants
+double dopantIonizedD(const Dopant dopant, const double fermi_lvl, const double Ec, const double x, Environment env)
+{
+    if(dopant.type & DOPANT_ELECTRON)
+    {
+        double Ed = Ec - dopant.delE;
+        double r = (fermi_lvl - Ed) / env.thermal_potential;
+
+        return ELECTRON_CHARGE * fxInterpolateSingle1D(dopant.conc, x) * dopant.degeneracy * exp(r) / (env.thermal_potential * (1 + dopant.degeneracy * exp(r))*(1 + dopant.degeneracy * exp(r)));
+    }
+    else if(dopant.type & DOPANT_HOLE)
+    {
+        double Ed = Ec - dopant.bulk.bandgap + dopant.delE;
+        double r = (Ed - fermi_lvl) / env.thermal_potential;
+
+        return ELECTRON_CHARGE * fxInterpolateSingle1D(dopant.conc, x) * dopant.degeneracy * exp(r) / (env.thermal_potential * (1 + dopant.degeneracy * exp(r))*(1 + dopant.degeneracy * exp(r)));
+    }
+
+    printf("Warning: invalid dopant type 0x%x\n", dopant.type);
+    return NAN;
+}
 
 // calculate the amount of dopant ionized, 
 void dopantIonizedConcV(const Dopant dopant, const Vec fermi_lvl, const Vec Ec, Environment env, Vec* ionized_conc)

@@ -28,6 +28,8 @@ Dopant dopantInitDonor1DA(Fx1D conc, Vec mesh, const double Ec_Ed, const double 
 double dopantIonizedConc(const Dopant dopant, const double fermi_lvl, const double Ec, const double x, Environment env);
 // calculate the the charge conc due to dopants
 double dopantIonized(const Dopant dopant, const double fermi_lvl, const double Ec, const double x, Environment env);
+// calculate the the charge conc due to dopants
+double dopantIonizedD(const Dopant dopant, const double fermi_lvl, const double Ec, const double x, Environment env);
 
 // calculate the amount of dopant ionized
 void dopantIonizedConcV(const Dopant dopant, const Vec fermi_lvl, const Vec Ec, Environment env, Vec* ionized_conc);

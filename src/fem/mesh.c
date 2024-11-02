@@ -19,18 +19,18 @@ Mesh meshInitPieceUniformA(Vec ranges, size_t sampleCount[], size_t count)
     for(size_t i = 0; i < count - 1; i++)
     {
         double interval = (VEC_INDEX(ranges, i + 1) - VEC_INDEX(ranges, i));
-        double spacing = interval / (double)(sampleCount[i] + 1);
+        double spacing = interval / (double)(sampleCount[i]);
 
         for(size_t j = 0; j < sampleCount[i]; j++)
         {
-            VEC_INDEX(mesh.x, point_count) = VEC_INDEX(ranges, i) + interval * ((double)(j + 1) / (double)(sampleCount[i] + 1));
+            VEC_INDEX(mesh.x, point_count) = VEC_INDEX(ranges, i) + interval * ((double)(j + 1) / (double)(sampleCount[i]));
             if(point_count > 0) VEC_INDEX(mesh.dx, point_count - 1) = spacing;
             point_count++;
         }
     }
     double interval = (VEC_INDEX(ranges, count) - VEC_INDEX(ranges, count - 1));
-    double spacing = interval / (double)(sampleCount[count - 1] + 2);
-    double samples = (double)(sampleCount[count - 1] + 2);
+    double spacing = interval / (double)(sampleCount[count - 1] + 1);
+    double samples = (double)(sampleCount[count - 1] + 1);
 
     for(size_t i = 0; i < sampleCount[count - 1]; i++)
     {
@@ -40,11 +40,13 @@ Mesh meshInitPieceUniformA(Vec ranges, size_t sampleCount[], size_t count)
     }
     if(point_count > 0) VEC_INDEX(mesh.dx, point_count - 1) = spacing;
 
+    /*
     for(size_t i = 0; i < mesh.len - 1; i++)
     {
         VEC_INDEX(mesh.dx, i) = VEC_INDEX(mesh.x, i + 1) - VEC_INDEX(mesh.x, i);
     }
     VEC_INDEX(mesh.dx, mesh.len - 1) = mesh.max - VEC_INDEX(mesh.x, mesh.len - 1);
+    */
 
     mesh.jacobianD2 = triDiagInitZeroA(mesh.len);
 

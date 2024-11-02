@@ -43,7 +43,9 @@ void scDopeDonor(SemiConductor* sc, Mesh mesh, const DopantInfo dopantInfo);
 double scTotalQ(SemiConductor sc, const double x, const double fermi_lvl, const double Ec);
 
 void scVecTotalQ(SemiConductor sc, const Vec fermi_lvl, const Vec Ec, Vec* net_charge);
+void scVecTotalQSS(SemiConductor sc, const Vec fermi_lvl, const Vec Ec, Vec* net_charge);
 void scVecTotalQD(SemiConductor sc, const Vec fermi_lvl, const Vec Ec, Vec* net_charge_d);
+void scVecTotalQSSD(SemiConductor sc, const Vec fermi_lvl, const Vec Ec, Vec* net_charge_d);
 
 double scSolveBoundary(SemiConductor sc, const double x, const double E, uint8_t flags);
 

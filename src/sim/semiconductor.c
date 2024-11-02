@@ -71,6 +71,20 @@ void scVecTotalQ(SemiConductor sc, const Vec fermi_lvl, const Vec Ec, Vec* net_c
 
     freeVec(&charge);
 }
+void scVecTotalQSS(SemiConductor sc, const Vec fermi_lvl, const Vec Ec, Vec* net_charge)
+{
+    // TODO: Optimize this
+    Vec charge = vecInitZerosA(net_charge->len);
+
+    for(size_t i = 0; i < sc.dopants.len; i++)
+    {
+        Dopant dopant = *(Dopant*)dynStackGet(sc.dopants, i);
+        dopantIonizedV(dopant, fermi_lvl, Ec, sc.env, &charge);
+        vecAdd(*net_charge, charge, net_charge);
+    }
+
+    freeVec(&charge);
+}
 void scVecTotalQD(SemiConductor sc, const Vec fermi_lvl, const Vec Ec, Vec* net_charge_d)
 {
     // TODO: Optimize this
@@ -82,6 +96,20 @@ void scVecTotalQD(SemiConductor sc, const Vec fermi_lvl, const Vec Ec, Vec* net_
     bulkHolesDV(sc.bulk, fermi_lvl, Ec, sc.env, &charge);
     vecScale(ELECTRON_CHARGE, charge, &charge);
     vecAdd(*net_charge_d, charge, net_charge_d);
+
+    for(size_t i = 0; i < sc.dopants.len; i++)
+    {
+        Dopant dopant = *(Dopant*)dynStackGet(sc.dopants, i);
+        dopantIonizedDV(dopant, fermi_lvl, Ec, sc.env, &charge);
+        vecAdd(*net_charge_d, charge, net_charge_d);
+    }
+
+    freeVec(&charge);
+}
+void scVecTotalQSSD(SemiConductor sc, const Vec fermi_lvl, const Vec Ec, Vec* net_charge_d)
+{
+    // TODO: Optimize this
+    Vec charge = vecInitZerosA(net_charge_d->len);
 
     for(size_t i = 0; i < sc.dopants.len; i++)
     {
