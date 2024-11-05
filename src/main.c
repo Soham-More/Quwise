@@ -127,12 +127,12 @@ int main()
 
     PyVi pyvi = pyviInitA("v.pyvi");
 
-    PyViBase pos = pyviCreateParameter(&pyvi, "position", mesh.x);
+    PyViBase pos     = pyviCreateParameter(&pyvi, "position", mesh.x);
     PyViSec pyvi_pot = pyviCreateSection(&pyvi, "potential", pos);
-    PyViSec pyvi_ch = pyviCreateSection(&pyvi, "charge", pos);
+    PyViSec pyvi_ch  = pyviCreateSection(&pyvi, "charge", pos);
     PyViSec pyvi_chd = pyviCreateSection(&pyvi, "charge derivative", pos);
     PyViSec pyvi_res = pyviCreateSection(&pyvi, "residual", pos);
-    PyViSec pyvi_J = pyviCreateSection(&pyvi, "Jacobian", pos);
+    PyViSec pyvi_J   = pyviCreateSection(&pyvi, "Jacobian", pos);
     //PyViSec pyvi_F = pyviCreateSection(&pyvi, "Fermi lvl", pos);
 
     pyviSectionPush(pyvi_pot, mesh.potential);
