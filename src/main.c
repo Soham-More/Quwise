@@ -41,7 +41,7 @@ int main()
     freeMat2D(&scratch);
     */
 
-    size_t N = 1 << 8;
+    size_t N = 1 << 10;
 
     double length = 1e-5;
     double n_doping = 1e21;
@@ -85,7 +85,7 @@ int main()
     printf("x_p: %le\n", xp - length/2.0);
 
     Mesh mesh = meshInitPieceUniformA(
-        vecConstruct((double[]){0.0, length / 2 - 0.1e-5, length / 2 + 0.1e-5, length}, 4),
+        vecConstruct((double[]){0.0, length / 2 - 0.4e-5, length / 2 + 0.3e-5, length}, 4),
         (size_t[]){N / 8, 3 * (N / 4) + 1, N / 8 - 1},
         3
     );
@@ -190,9 +190,9 @@ int main()
         {
             w = 2.0;
         }
-        else if(i > 40)
+        else if(i > 30)
         {
-            w = 0.2;
+            w = 1.5;
         }
         // make it converge faster
         else
